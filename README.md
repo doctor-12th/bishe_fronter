@@ -42,3 +42,5 @@ auth.vue （部门主管，管理所有普通员工的文件权限）
 datamangement.vue (table)
 
 
+fix the ssh
+
