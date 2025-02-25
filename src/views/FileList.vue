@@ -1,57 +1,44 @@
 <template>
   <!-- 主容器 -->
-  <div style="width: 100vw;height: 80px; line-height:80px; border-bottom: 1px solid #ccc; display: flex">
-   <div style="width: 300px; padding-left:30px; font-weight: bold; color:dodgerblue;font-size: 30px">
-     <!-- <img :src="imgUrl" class="icon" > -->
+  <div style="width: 100vw;height: 80px; line-height:80px; border-bottom: 1px solid #ccc; display: flex;flex-direction: row;justify-content: space-between;">
+    <div style="width: 300px; padding-left:30px; font-weight: bold; color:dodgerblue;font-size: 30px">
      企业文件管理系统
     </div>
-   <!-- <div style="flex: 1"></div> -->
-   <div style="position:fixed;right:10px;top:0px;font-size: 25px;">
-     <!-- <el-dropdown>
-      <span class="el-dropdown-link"> -->
-         <!-- <el-icon class="el-icon--right"> -->
-          <el-icon><User /></el-icon>
-         {{ user.username }}
-          <!-- </el-icon> -->
-      <!-- </span> -->
-      <el-button type="primary" @click="logout" style="font-size: 20px;">退出系统</el-button>
-       <!-- <template #dropdown>
-         <el-dropdown-menu>
-           <el-dropdown-item @click="logout">退出系统</el-dropdown-item>
-         </el-dropdown-menu>
-       </template> -->
-     <!-- </el-dropdown> -->
+
+   <div style="font-size: 25px;padding-right: 30px;margin-left: 20px;">
+      <el-icon><User /></el-icon>{{ user.username }}
+      <el-button type="primary" @click="logout" style="font-size: 20px; ">退出系统</el-button>
    </div>
  </div>
     <!-- 导航栏 -->
 
 
-      <!-- 主内容区 -->
-      <div style="display: flex;">
-        <!-- 侧边栏菜单 -->
-        <el-aside width="200px">
-          <el-menu
-          style="width: 200px; min-height: calc(100vh - 50px);"
-            router
-            :default-active="$route.path"
-          >
-          <el-menu-item
-            v-for="menu in menuItems"
-              :key="menu.fullPath"
-              :index="menu.fullPath">
-              <el-icon><component :is="menu.icon" /></el-icon>
-              <span>{{ menu.title }}</span>
-          </el-menu-item>
-          </el-menu>
-        </el-aside>
+  <!-- 主内容区 -->
+  <div style="display: flex;">
+    <!-- 侧边栏菜单 -->
+    <el-aside width="200px">
+      <el-menu
+      style="width: 200px; min-height: calc(100vh - 50px);"
+        router
+        :default-active="$route.path"
+      >
+      <el-menu-item
+        v-for="menu in menuItems"
+          :key="menu.fullPath"
+          :index="menu.fullPath">
+          <el-icon><component :is="menu.icon" /></el-icon>
+          <span>{{ menu.title }}</span>
+      </el-menu-item>
+      </el-menu>
+    </el-aside>
 
-        <!-- 内容区域 -->
-          <router-view style="flex: 1;"/>
-      </div>
+    <!-- 内容区域 -->
+      <router-view style="flex: 1;"/>
+  </div>
 </template>
 
 <script setup>
-import { Document, Share, Setting, DataAnalysis } from '@element-plus/icons-vue'
+import { Document, Share, Setting, DataAnalysis,Filter} from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { onMounted ,computed} from 'vue'
 import { useAuthStore } from '@/stores/auth'
@@ -93,6 +80,11 @@ const menuAllItems = [
     title: '数据管理',
     fullPath: '/fileslist/data',
     icon: DataAnalysis
+  },
+  {
+    title: '日志管理',
+    fullPath: '/fileslist/log',
+    icon: Filter
   }
 ]
 onMounted(() => {

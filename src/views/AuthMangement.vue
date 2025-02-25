@@ -2,9 +2,9 @@
   <el-card class="file-list-card">
     <h2>文件列表</h2>
     <el-table :data="paginatedFiles" style="width: 100%">
-      <el-table-column prop="id" label="文件ID" width="120"></el-table-column>
-      <el-table-column prop="filename" label="文件名" width="400"></el-table-column>
-      <el-table-column prop="permission" label="当前权限" width="300" >
+      <el-table-column prop="id" label="文件ID"></el-table-column>
+      <el-table-column prop="filename" label="文件名"></el-table-column>
+      <el-table-column prop="permission" label="当前权限">
         <template #default="scope">
           <el-tag :type="getPermissionTagType(scope.row.permission)">
             {{ formatPermission(scope.row.permission) }}

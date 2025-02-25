@@ -39,8 +39,8 @@ const routes = [
       },
       {
         path: 'log',
-        name: 'DataMangement',
-        component: () => import('@/views/DataMangement.vue'),
+        name: 'LogMangement',
+        component: () => import('@/views/LogMangement.vue'),
         // meta: { requiresAuth: true }
       }
     ]

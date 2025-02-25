@@ -100,7 +100,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="file-manager" style="padding:3%;">
+  <div class="file-manager">
     <div class="toolbar">
       <el-select
       v-model="selectedType"
@@ -169,6 +169,7 @@ onMounted(() => {
     <el-table :data="paginatedFiles" style="width: 100%;">
       <el-table-column prop="filename" label="文件名" />
       <el-table-column prop="createdAt" label="创建时间"/>
+      <el-table-column prop="departmentId" label="所属部门"/>
       <el-table-column prop="fileType" label="类型" />
       <el-table-column label="操作">
         <template #default="{row}">
@@ -224,7 +225,7 @@ onMounted(() => {
 /* 全局布局 */
 .file-manager {
   /* display: flex; */
-  /* padding: 24px; */
+  padding: 24px;
   /* background-color: #f5f7fa; */
   /* min-height: 100vh; */
   width:100%;
