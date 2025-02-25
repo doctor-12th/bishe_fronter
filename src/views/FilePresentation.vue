@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted,computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useFileStore } from '@/stores/files'
 import { DocumentCopy, InfoFilled } from '@element-plus/icons-vue'
@@ -10,12 +10,28 @@ const fileList = ref(fileStore.files)
 const selectedType = ref('all')
 const searchQuery = ref('')
 // 文件类型选项
+const filePage = ref({ currentPage: 1, pageSize: 10 });
+const paginatedFiles = computed(() => {
+  const start = (filePage.value.currentPage - 1) * filePage.value.pageSize;
+  const end = start + filePage.value.pageSize;
+  // console.log(fileStore.selectfiles.slice(start, end))
+  // debugger
+  return fileStore.selectfiles.slice(start, end);
+});
 const typeOptions = [
-  { value: 'all', label: '所有类型' },
-  { value: 'image', label: '图片' },
-  { value: 'document', label: '文档' },
-  { value: 'video', label: '视频' }
+  { value: '所有类型', label: '所有类型' },
+  { value: '图片', label: '图片' },
+  { value: '文档', label: '文档' },
+  { value: '视频', label: '视频' }
 ]
+// 分页事件处理
+const handleFilePageChange = (page) => {
+  filePage.value.currentPage = page;
+};
+
+const handleFilePageSizeChange = (size) => {
+  filePage.value.pageSize = size;
+};
 const shareDialogVisible = ref(false)
 const shareLink = ref('')
 const isCopying = ref(false)
@@ -30,6 +46,9 @@ const fileShare = async(row)=>{
   console.log(link)
 
 }
+const shareCodeDialogVisible = ref(false)
+const shareCodeInput = ref('')
+
 // // 上传前验证
 // const beforeUpload = (file) => {
 //   fileStore.beforeUpload(file)
@@ -40,8 +59,10 @@ const fileUpload = async (options) => {
   fileStore.fileUpload(options)
 };
 const getShareFile = ()=>{
-  fileStore.getShareFile()
+  fileStore.getShareFile(shareCodeInput.value)
+  shareCodeDialogVisible.value = false
 }
+
 
 const copyShareLink = async () => {
   try {
@@ -60,6 +81,10 @@ const copyShareLink = async () => {
 // };
 // 触发筛选
 const handleFilter = () => {
+  console.log({
+    search: searchQuery.value,
+    type: selectedType.value
+  })
   fileStore.applyFilters({
     search: searchQuery.value,
     type: selectedType.value
@@ -67,15 +92,15 @@ const handleFilter = () => {
 }
 onMounted(() => {
   // console.log(fileStore.files.length)
-  if (!fileStore.files.length) {
+  // if (!fileStore.files.length) {
     fileStore.fetchFiles()
-  }
+  // }
 
 })
 </script>
 
 <template>
-  <div class="file-manager">
+  <div class="file-manager" style="padding:3%;">
     <div class="toolbar">
       <el-select
       v-model="selectedType"
@@ -90,33 +115,77 @@ onMounted(() => {
           :value="item.value"
         />
       </el-select>
-      <el-input v-model="searchQuery" placeholder="搜索文件" @change="fileStore.searchFiles(searchQuery)" />
+      <div style="height: 40px;width:100%;padding-left: 50px;">
+        <el-input v-model="searchQuery" placeholder="搜索文件" @change="fileStore.searchFiles(searchQuery)" />
+      </div>
 
-      <el-upload
+      <el-upload style="font-size:20px;"
         ref="uploadRef"
         :http-request="fileUpload"
         :auto-upload="false"
         :on-change= "handleFileChange"
       >
-        <el-button type="primary">选择文件</el-button>
+      <template #trigger>
+        <el-button size= "large" type="primary" style="font-size:18px;">选择文件</el-button>
+      </template>
+
 
       </el-upload>
-      <el-button type="success" @click="uploadRef.submit()">上传文件</el-button>
-      <el-button type="primary" @click="getShareFile">分享</el-button>
+      <el-button size= "large" type="success" @click="uploadRef.submit()" style="font-size:18px;">上传文件</el-button>
+      <el-button size="large" type="primary" @click="shareCodeDialogVisible = true" style="font-size:18px;">获取分享文件</el-button>
+      <el-dialog
+    v-model="shareCodeDialogVisible"
+    title="获取分享文件"
+    width="30%"
+  >
+    <div class="share-code-container">
+      <el-input
+        v-model="shareCodeInput"
+        placeholder="请输入分享链接"
+        clearable
+      >
+        <template #prepend>
+          <el-icon><Link /></el-icon>
+        </template>
+      </el-input>
+
+      <div class="tip-text">
+        <el-icon><InfoFilled /></el-icon>
+        <span>请粘贴完整的文件分享链接</span>
+      </div>
+
+      <div class="dialog-footer">
+        <el-button
+          type="primary"
+          @click="getShareFile"
+        >
+          获取文件
+        </el-button>
+      </div>
+    </div>
+  </el-dialog>
     </div>
 
-    <el-table :data="fileStore.files" style="width: 100%">
+    <el-table :data="paginatedFiles" style="width: 100%;">
       <el-table-column prop="filename" label="文件名" />
-      <el-table-column prop="createdAt" label="创建时间" />
+      <el-table-column prop="createdAt" label="创建时间"/>
       <el-table-column prop="fileType" label="类型" />
-      <el-table-column label="操作" width="180">
+      <el-table-column label="操作">
         <template #default="{row}">
           <el-button @click="fileStore.downloadFile(row)">下载</el-button>
-          <el-button type="danger">删除</el-button>
           <el-button type="danger" @click="fileShare(row)">分享</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+        v-model:current-page="filePage.currentPage"
+        v-model:page-size="filePage.pageSize"
+        :total="fileStore.files.length"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleFilePageSizeChange"
+        @current-change="handleFilePageChange"
+      />
       <!-- 分享链接对话框 -->
   <el-dialog
     v-model="shareDialogVisible"
@@ -149,32 +218,56 @@ onMounted(() => {
       </div>
     </div>
   </el-dialog>
-    <el-pagination
-      :current-page="fileStore.pagination.current"
-      :page-size="fileStore.pagination.pageSize"
-      :total="fileStore.pagination.total"
-      @current-change="fileStore.fetchFiles"
-    />
   </div>
 </template>
 <style scoped>
 /* 全局布局 */
 .file-manager {
-  padding: 24px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
+  /* display: flex; */
+  /* padding: 24px; */
+  /* background-color: #f5f7fa; */
+  /* min-height: 100vh; */
+  width:100%;
+}
+.share-code-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
+.tip-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #909399;
+  font-size: 12px;
+
+  .el-icon {
+    color: #409eff;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
 /* 工具栏样式 */
 .toolbar {
   display: flex;
-  align-items: center;
+  /* align-items: center;
   gap: 16px;
   margin-bottom: 24px;
   background-color: #ffffff;
   padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+:deep(.el-upload-list__item){
+  width:100px
 }
 
 /* 选择器样式 */

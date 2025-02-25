@@ -6,9 +6,11 @@ import { ElMessage } from 'element-plus'
 export const useFileStore = defineStore('files', {
   state: () => ({
     files: [],
+    selectfiles: [],
     departfiles:[],
     logs:[],
     sharefiles:[],
+    selectsharefiles:[],
     pagination: {
       current: 1,
       pageSize: 10,
@@ -51,6 +53,7 @@ export const useFileStore = defineStore('files', {
             message:  `${options.file.name} 上传成功`,
             type: 'success',
           })
+          this.fetchFiles()
         }).catch(error => {
           console.log(error)
           ElMessage({
@@ -63,16 +66,18 @@ export const useFileStore = defineStore('files', {
       var token = localStorage.getItem('token')
       axios.get('share/shareByUser',{
         headers: {
-          'token': `${token}`,
+          'token': token,
         }}).then(response => {
 
             // console.log(response.data)
             this.sharefiles = response.data
             this.sharefiles = this.sharefiles.map(file => ({
               ...file,
+              fileType: this.getFileType(file.fileName), // 添加类型字段
               isShared:true
 
             }))
+            this.selectsharefiles = this.sharefiles
             console.log(this.sharefiles)
             ElMessage({
               message: '获取文件成功',
@@ -92,9 +97,9 @@ export const useFileStore = defineStore('files', {
             this.files = this.files.map(file => ({
               ...file,
               fileType: this.getFileType(file.filename), // 添加类型字段
-
             }))
-            // console.log(response.data)
+            this.selectfiles = this.files
+            console.log(response.data)
             ElMessage({
               message: '获取文件成功',
               type: 'success',
@@ -114,6 +119,7 @@ export const useFileStore = defineStore('files', {
         docx: '文档',
         pdf: '文档',
         txt: '文档',
+        xlsx:'文档',
         xls: '文档',
         mp4: '视频',
         mov: '视频',
@@ -122,36 +128,54 @@ export const useFileStore = defineStore('files', {
       }
       return typeMap[ext] || 'other'
     },
+    searchShareFiles(query) {
+      console.log(query)
+      if (query == ''){
+        this.fetchShareFiles()
+        return
+      }
+      this.selectsharefiles = this.sharefiles.filter(file =>{
+        return file.fileName.toLowerCase().includes(query.toLowerCase())
+      }
+
+      )
+      console.log(this.selectsharefiles)
+    },
     searchFiles(query) {
       console.log(query)
       if (query == ''){
         this.fetchFiles()
         return
       }
-      this.files = this.files.filter(file =>
+      this.selectfiles = this.files.filter(file =>
         file.filename.toLowerCase().includes(query.toLowerCase())
       )
-      console.log(this.files)
+      console.log(this.selectfiles)
     },
     applyFilters(filters) {
-      // 合并筛选条件
-      this.filters = {
-        search: filters.search,
-        type: this.filters.type,
-        ...filters
+      // console.log(this.files)
+      if (filters.type == '所有类型') {
+        this.selectfiles = this.files
+        return
       }
-
-      // 执行复合筛选
-      this.filteredFiles = this.files.filter(file => {
-        const matchType = this.filters.type === 'all'
-          ? true
-          : file.fileType === this.filters.type
-
-        return matchType
-      })
-
-      // 更新分页总数（如果后端分页需调整）
-      this.pagination.total = this.filteredFiles.length
+        // 执行复合筛选
+      this.selectfiles = this.files.filter(file =>
+          {return file.fileType == filters.type}
+      )
+      console.log(this.selectfiles)
+    },
+    applyShareFilters(filters) {
+      console.log(filters)
+      if (filters.type == '所有类型') {
+        this.selectsharefiles = this.sharefiles
+        return
+      }
+        // 执行复合筛选
+      this.selectsharefiles = this.sharefiles.filter(file =>
+          {console.log(file.fileType,filters.type)
+            return file.fileType == filters.type}
+      )
+      console.log(this.selectsharefiles)
     },
     matchType(file) {
       if (this.filters.type === 'all') return true
@@ -214,21 +238,22 @@ export const useFileStore = defineStore('files', {
         })
       }
     },
-    getShareFile(){
+    getShareFile(link){
       var token = localStorage.getItem('token')
       var data = {
-        "shareCode":'test-code'
+        "shareCode":link
       }
       axios.post('share/use',data,{
         headers: {
           'token': `${token}`,
           'Content-Type': 'multipart/form-data'
-        }}).then(response => {
-            console.log(response)
+        }}).then(() => {
+            // console.log(response)
             ElMessage({
               message: '获取文件成功',
               type: 'success',
             })
+            this.fetchFiles()
       }).catch(error => {
         console.log(error)
         // ElMessage({
@@ -260,7 +285,7 @@ export const useFileStore = defineStore('files', {
     },
     async fetchDepartFiles(){
       try {
-        const response = await axios.get('/admin/files', {
+        const response = await axios.get('file', {
           headers: { Token: localStorage.getItem('token') },
           'Content-Type': 'multipart/form-data',
         });
@@ -272,11 +297,13 @@ export const useFileStore = defineStore('files', {
     },
     async fetchLogs(logFilter){
       try {
-        const startTimestamp = logFilter.value.startTime ? new Date(logFilter.value.startTime).getTime() : null;
-        const endTimestamp = logFilter.value.endTime ? new Date(logFilter.value.endTime).getTime() : null;
+        const startTimestamp = logFilter.value.startTime ? new Date(logFilter.value.startTime).getTime()/1000 : null;
+        const endTimestamp = logFilter.value.endTime ? new Date(logFilter.value.endTime).getTime()/1000 : null;
+        console.log(logFilter.value.startTime,logFilter.value.endTime)
+        console.log(startTimestamp,endTimestamp)
         var data = {
-            'startTime': startTimestamp,
-            'endTime': endTimestamp,
+            'startTimeStr': startTimestamp,
+            'endTimeStr': endTimestamp,
         }
         // console.log(data)
 
@@ -288,7 +315,7 @@ export const useFileStore = defineStore('files', {
 
         });
         this.logs = response.data;
-        console.log(this.logs[0])
+        console.log(this.logs.length)
       } catch (error) {
         console.error('获取日志失败:', error);
       }

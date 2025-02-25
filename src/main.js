@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import axios from 'axios'
+import 'element-plus/dist/index.css';
 axios.defaults.baseURL = 'http://10.20.228.101:8080'
 const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

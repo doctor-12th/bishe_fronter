@@ -1,6 +1,6 @@
 // src/stores/auth.js
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref ,computed} from 'vue'
 import axios from 'axios'
 import router from '@/router'
 import { ElMessage } from 'element-plus'
@@ -25,19 +25,22 @@ export const useAuthStore = defineStore('auth', () => {
       }).then(response => {
         token.value = response.data.token
         user.value = response.data.user
-        console.log(token.value,user.value)
+        // console.log(token.value,user.value)
         ElMessage({
           message: '登录成功',
           type: 'success',
+          plain: true,
         })
-        localStorage.setItem('user', user.value)
+        localStorage.setItem('user', JSON.stringify(user.value))
         localStorage.setItem('token', token.value)
+        console.log(user.value)
         router.push('/fileslist')
       }).catch(error => {
-        console.log(error.response.data)
+        // console.log(error.response.data)
         ElMessage({
           message: error.response.data || '登录失败',
           type: 'error',
+          plain: true,
         })
       })
   }
@@ -48,6 +51,21 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
     router.push('/')
   }
+  const isAdmin = computed(()=>{
+      if(typeof user.value=='object'){
+          return user.value.role == 'admin'
+      }else{
+        return JSON.parse(user.value).role == 'admin'
+      }
 
-  return { user, token, login, logout,test_login}
+  })
+  const isManager = computed(()=>{
+
+    if(typeof user.value=='object'){
+      return user.value.role == 'manager'
+    }else{
+      return JSON.parse(user.value).role == 'manager'
+    }
+  })
+  return { user, token, login, logout,test_login,isAdmin,isManager}
 })

@@ -9,7 +9,7 @@ const auth = useAuthStore()
 // const router = useRouter()
 
 const loginForm = reactive({
-  username: 'admin',
+  username: 'tom',
   password: '123456'
 })
 
@@ -50,7 +50,7 @@ const handleLogin = async () => {
         :rules="loginRules"
       >
         <!-- 用户名输入 -->
-        <el-form-item prop="username">
+        <el-form-item>
           <el-input
             v-model="loginForm.username"
             placeholder="请输入用户名"
@@ -64,7 +64,7 @@ const handleLogin = async () => {
         </el-form-item>
 
         <!-- 密码输入 -->
-        <el-form-item prop="password">
+        <el-form-item>
           <el-input
             v-model="loginForm.password"
             type="password"
@@ -122,8 +122,8 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
+  //position: relative;
+  //overflow: hidden;
 
 
   .login-box {
